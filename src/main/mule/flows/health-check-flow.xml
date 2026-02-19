@@ -18,7 +18,7 @@ output application/json
 {
   status: "UP",
   api: "inventory-papi",
-  version: "v1",
+  version: attributes.uriParams.version default "v1",
   timestamp: now() as String
 }
                 ]]></ee:set-payload>

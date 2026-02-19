@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+      http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="inventory-getbyid-flow" doc:id="24f9123e-02b6-4e3c-bb3b-c4ba489bc746" >
+		<ee:transform doc:name="Transform Message" doc:id="5ebb1e74-7f68-44a8-81d0-5948d11f2e09" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var id = vars.itemID
+---
+{
+  itemId: id,
+  name: if (id == "1001") "Laptop"
+        else if (id == "1002") "Mouse"
+        else if (id == "1003") "Keyboard"
+        else "Unknown item",
+  quantity: if (id == "1001") 15
+            else if (id == "1002") 50
+            else if (id == "1003") 30
+            else 0,
+  price: if (id == "1001") 1200
+         else if (id == "1002") 25
+         else if (id == "1003") 75
+         else 0
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+
+</mule>
