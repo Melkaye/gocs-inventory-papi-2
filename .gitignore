@@ -1,0 +1,19 @@
+# MuleSoft / Anypoint Studio
+.mule/
+.tooling/
+.tooling-apps-cache/
+.metadata/
+
+# Build output
+target/
+
+# Mac system files
+.DS_Store
+
+# Logs
+*.log
+
+# IDE files
+.classpath
+.project
+.settings/
