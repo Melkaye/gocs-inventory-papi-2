@@ -187,12 +187,13 @@ output application/json
 output application/json
 ---
 {
-  correlationId: "abc-123",
+  correlationId: correlationId,
   status: "ACCEPTED",
   message: "Inventory sync started",
-  timestamp: "2026-02-16T10:30:00Z"
-} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+  timestamp: now() as String
+}]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="9b11b341-acf8-40dc-967b-1b8e515829ae" message="Correlation ID: #[correlationId]"/>
 	</flow>
 </mule>
