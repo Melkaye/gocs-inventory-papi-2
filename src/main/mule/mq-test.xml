@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+  <!-- MQ TEST HTTP LISTENER CONFIG (PORT 8083) -->
+
+  <!-- JMS GLOBAL CONFIG -->
+  <jms:config name="JMS_Config" doc:name="JMS Config">
+    <jms:active-mq-connection username="${activemq.username}" password="${activemq.password}">
+      <!-- Use ONE of these. If brokerUrl is red in your Studio, switch to brokerURL. -->
+      <jms:factory-configuration brokerUrl="tcp://127.0.0.1:61616"/>
+      <!-- <jms:factory-configuration brokerURL="tcp://127.0.0.1:61616"/> -->
+    </jms:active-mq-connection>
+  </jms:config>
+
+  <!-- MQ TEST FLOW -->
+  <http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="24c9d27a-719f-4548-b9c8-a725c8c71451" >
+		<http:listener-connection host="0.0.0.0" port="8083" />
+	</http:listener-config>
+	<flow name="mq-testFlow">
+    <http:listener doc:name="Listener" path="/mq-test-publish" config-ref="HTTP_Listener_config1"/>
+
+    <ee:transform doc:name="Transform Message">
+      <ee:message>
+        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  itemId: "ITEM-1001",
+  stockLevel: 2,
+  timestamp: now() as String
+}]]></ee:set-payload>
+      </ee:message>
+    </ee:transform>
+
+    <jms:publish doc:name="JMS Publish" destination="procurement.alert.queue" config-ref="JMS_Config"/>
+  </flow>
+
+</mule>

@@ -12,6 +12,7 @@ salesforce:
   username: "your.sf.user@example.com"
   token: "sf-token-placeholder"
 
-mq:
-  clientId: "mqClient"
-  clientSecret: "mq-secret-placeholder"
+activemq:
+  username: "admin"
+  password: "admin"
+  brokerUrl: "tcp://localhost:61616"

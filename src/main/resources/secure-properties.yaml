@@ -1,0 +1,9 @@
+db:
+  password: "![qT0tSHaQ/ufwE1SXFSHK+N8RFYl/EPMimKXRcVa+rbWoOO4QEanH9GKr0XbEqfEL]"
+
+salesforce:
+  token: "![aCLlALDYNKaiKKT4OH7bmMpZkeCEi6Q4I6V50S8BXa05ety8MGsV9PXs8OSDklq0]"
+
+activemq:
+  username: "![S1Oy+NyNt9qKm0o5PPRge2Bmj738JFbaVWAeEp3CvPk=]"
+  password: "![OHqRn/1tI4mOkDxLAc52Us3iohHbqF+UISka4bCayb8=]"

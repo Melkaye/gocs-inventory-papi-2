@@ -10,29 +10,27 @@
 http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
 http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
 http://www.mulesoft.org/schema/mule/netsuite http://www.mulesoft.org/schema/mule/netsuite/current/mule-netsuite.xsd">
-	<http:listener-config
-		name="gocs-inventory-papi-httpListenerConfig">
-		<http:listener-connection host="0.0.0.0"
-			port="${http.port}" />
-	</http:listener-config>
 	<apikit:config name="gocs-inventory-papi-config"
 		api="resource::2c71d3d8-324e-48ff-adca-ccaa17313120:gocs-inventory-papi:1.0.0:raml:zip:gocs-inventory-papi.raml"
 		outboundHeadersMapName="outboundHeaders"
 		httpStatusVarName="httpStatus" />
 	<api-gateway:autodiscovery apiId="20746516" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="08f9abe4-458b-4221-bb54-a7c35c12d3a0" flowRef="gocs-inventory-papi-main" />
 	<configuration-properties doc:name="Configuration properties" doc:id="a70d0c56-bfe4-45b7-8a43-5462bbdcfa0f" file="inventory-config.yaml" />
-	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="7919da53-8f61-41b0-810f-1c178fe5c278" file="config-secure.properties" key="${secure.key}" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="19bc314d-73b5-4ed9-9351-870ab08150ac" file="secure-properties.yaml" key="${secure.key}" />
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="309b0f97-8815-43e4-947b-492032338dc6" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
 	<flow name="gocs-inventory-papi-main">
 		<http:listener
-			config-ref="gocs-inventory-papi-httpListenerConfig" path="/api/*">
+			path="/api/*" config-ref="HTTP_Listener_config">
 			<http:response
 				statusCode="#[vars.httpStatus default 200]">
-				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
+				<http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
 			</http:response>
 			<http:error-response
 				statusCode="#[vars.httpStatus default 500]">
-				<http:body>#[payload]</http:body>
-				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
+				<http:body><![CDATA[#[payload]]]></http:body>
+				<http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
 			</http:error-response>
 		</http:listener>
 		<apikit:router config-ref="gocs-inventory-papi-config" />
@@ -128,15 +126,15 @@ output application/json
 	</flow>
 	<flow name="gocs-inventory-papi-console">
 		<http:listener
-			config-ref="gocs-inventory-papi-httpListenerConfig" path="/console/*">
+			path="/console/*" config-ref="HTTP_Listener_config">
 			<http:response
 				statusCode="#[vars.httpStatus default 200]">
-				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
+				<http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
 			</http:response>
 			<http:error-response
 				statusCode="#[vars.httpStatus default 500]">
-				<http:body>#[payload]</http:body>
-				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
+				<http:body><![CDATA[#[payload]]]></http:body>
+				<http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
 			</http:error-response>
 		</http:listener>
 		<apikit:console config-ref="gocs-inventory-papi-config" />
