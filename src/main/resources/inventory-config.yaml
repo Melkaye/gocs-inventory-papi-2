@@ -1,0 +1,17 @@
+http:
+  port: "8081"
+
+db:
+  host: "localhost"
+  port: "3306"
+  user: "myuser"
+  password: "mypassword"
+  database: "inventory"
+
+salesforce:
+  username: "your.sf.user@example.com"
+  token: "sf-token-placeholder"
+
+mq:
+  clientId: "mqClient"
+  clientSecret: "mq-secret-placeholder"
