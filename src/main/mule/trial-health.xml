@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="trial-healthFlow" doc:id="3938d414-80a6-44e4-a2e5-fb5d3e966fbc" >
+		<http:listener doc:name="Listener" doc:id="a58d97cd-aac3-4b19-a5e7-ed0319b23a22" path="/api/health" config-ref="HTTP_Listener_config"/>
+		<set-payload value='{"debug":"health bypass worked"}' doc:name="Set Payload" doc:id="3db268e4-b766-43a1-afc2-126144700f76" />
+	</flow>
+</mule>

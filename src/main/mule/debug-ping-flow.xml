@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="debug-ping-flowFlow" doc:id="3a450913-03f1-4125-8a0b-a40ee941b210" >
+		<http:listener doc:name="Listener" doc:id="7020f1b0-14ea-44c4-9a86-aba2300d1ea4" config-ref="HTTP_Listener_config" path="/api/ping"/>
+		<set-payload value="pong" doc:name="Set Payload" doc:id="ddd66e2d-034a-4790-b27e-1afa3746895c" />
+	</flow>
+</mule>
