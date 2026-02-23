@@ -11,17 +11,15 @@
     <flow name="health-impl" doc:id="2a3f871e-4391-4876-9453-fd69c67291cd">
         <ee:transform doc:name="Health Response">
             <ee:message>
-                <ee:set-payload><![CDATA[
-%dw 2.0
+                <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
   status: "UP",
   api: "inventory-papi",
-  version: attributes.uriParams.version default "v1",
-  timestamp: now() as String
-}
-                ]]></ee:set-payload>
+  version: "v1",
+  timestamp: (now() as String)
+}             ]]></ee:set-payload>
             </ee:message>
         </ee:transform>
     </flow>
