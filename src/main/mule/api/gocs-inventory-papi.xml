@@ -14,7 +14,7 @@ http://www.mulesoft.org/schema/mule/netsuite http://www.mulesoft.org/schema/mule
 		api="resource::2c71d3d8-324e-48ff-adca-ccaa17313120:gocs-inventory-papi:1.0.0:raml:zip:gocs-inventory-papi.raml"
 		outboundHeadersMapName="outboundHeaders"
 		httpStatusVarName="httpStatus" />
-	<api-gateway:autodiscovery apiId="20746516" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="08f9abe4-458b-4221-bb54-a7c35c12d3a0" flowRef="gocs-inventory-papi-main" />
+	<!-- <api-gateway:autodiscovery apiId="20746516" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="c548fd9b-6f3a-470b-9a5c-b9d1c87bed09" flowRef="gocs-inventory-papi-main" /> -->	
 	<configuration-properties doc:name="Configuration properties" doc:id="a70d0c56-bfe4-45b7-8a43-5462bbdcfa0f" file="inventory-config.yaml" />
 	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="19bc314d-73b5-4ed9-9351-870ab08150ac" file="secure-properties.yaml" key="${secure.key}" />
 	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="309b0f97-8815-43e4-947b-492032338dc6" >
