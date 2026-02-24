@@ -22,15 +22,13 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
 		<http:listener-connection host="0.0.0.0" port="${http.port}" />
 	</http:listener-config>
 	<db:config name="Database_Config" doc:name="Database Config" doc:id="0a33ca15-69d6-45af-b56d-c99631027a81" >
-		<db:my-sql-connection host="localhost" port="3306" user="root" password="Nolanathan2024!!!" />
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="Nolanathan2024!!!" database="inventory_db"/>
 	</db:config>
 	<flow name="gocs-inventory-papi-main">
 		<http:listener
 			path="/api/*" config-ref="HTTP_Listener_config">
 		</http:listener>
-		<logger level="INFO" doc:name="Logger" doc:id="02184b0e-d0dd-42af-a9ea-8cc99f9666f0" message='#["ENTER APIKIT MAIN -&gt; " ++ attributes.requestPath]'/>
 		<apikit:router config-ref="gocs-inventory-papi-config" />
-		<logger level="INFO" doc:name="Logger" doc:id="b7e0f971-08b7-426c-b668-973bd3a69965" message='#["EXIT APIKIT MAIN -&gt; " ++ attributes.requestPath]'/>
 		<error-handler>
 			<on-error-propagate type="APIKIT:BAD_REQUEST">
 				<set-variable value="400" doc:name="Set Variable" doc:id="362b5f27-f8f7-49d1-8182-bffcd97dbd4f" variableName="httpStatus"/>
@@ -157,28 +155,17 @@ output application/json
 			doc:id="3b96fbbe-ebdc-4f4f-8356-29d3ae807056" name="health-impl" />
 	</flow>
 	<flow name="get:\inventory\(itemId):gocs-inventory-papi-config">
-		<set-variable value="attributes.uriParams.itemID" doc:name="Set Variable" doc:id="a8acaa07-144c-4437-9dfd-fd146e5e97b3" variableName="itemID"/>
+		<set-variable value="#[attributes.uriParams.itemId]" doc:name="Set Variable" doc:id="dcd9f038-38a2-45b0-aed1-26e9214a0b6d" variableName="itemId"/>
 		<flow-ref doc:name="Flow Reference" doc:id="dac0211a-e39e-470a-b11e-9619044075a3" name="inventory-getbyid-flow"/>
-		<ee:transform doc:name="Transform Message">
-			<ee:variables>
-				<ee:set-variable variableName="itemId">attributes.uriParams.'itemId'
-				</ee:set-variable>
-			</ee:variables>
-		</ee:transform>
-		<ee:transform doc:name="Transform Message">
-			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
+		<ee:transform doc:name="Transform Message" doc:id="6c820b23-f4e6-4020-9889-f949abcbedc1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-{
-  itemId: "SKU-10001",
-  locationId: "WH-01",
-  onHand: 100,
-  reserved: 20,
-  available: 80,
-  lastUpdatedAt: "2026-02-16T10:00:00Z",
-  sourceSystem: "MYSQL"
-} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+payload[0] default {
+  message: "Inventory item not found",
+  itemId: vars.itemId
+}]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
