@@ -1,0 +1,118 @@
+#%RAML 1.0
+title: inventory-papi
+version: v1
+mediaType: application/json
+protocols: [ HTTP, HTTPS ]
+
+traits:
+  client-id-required:
+    headers:
+      client_id:
+        type: string
+        required: true
+      client_secret:
+        type: string
+        required: true
+
+  standard-errors:
+    responses:
+      400:
+        body:
+          application/json:
+            type: ErrorResponse
+            example:
+              errorCode: "INV-400"
+              message: "Bad Request"
+              timestamp: "2026-02-16T10:21:00Z"  
+      404:
+        body:
+          application/json:
+            type: ErrorResponse
+            example:
+              errorCode: "INV-404"
+              message: "Not Found"
+              timestamp: "2026-02-16T10:21:00Z"
+      500:
+        body:
+          application/json:
+            type: ErrorResponse
+            example:
+              errorCode: "INV-500"
+              message: "Internal Server Error"
+              timestamp: "2026-02-16T10:21:00Z"            
+
+types:
+  InventoryItem:
+    type: object
+    properties:
+      itemId: string
+      locationId: string
+      onHand: integer
+      reserved: integer
+      available: integer
+      lastUpdatedAt: datetime
+      sourceSystem: string 
+
+  SyncResponse:
+    type: object
+    properties:
+      correlationId: string
+      status: string
+      message: string
+      timestamp: 
+        type: datetime
+
+  ErrorResponse:
+    type: object
+    properties:
+      errorCode: string
+      message: string
+      timestamp:
+        type: datetime
+
+/health:
+  get:
+    is: [ client-id-required, standard-errors ]
+    responses:
+      200:
+         body:
+          application/json:
+            example:
+              status: "UP"
+              api: "inventory-papi"
+              version: "v1"
+              timestamp: "2026-02-16T10:22:00Z"
+
+/inventory/{itemId}:
+  get:
+    is: [ client-id-required, standard-errors ]
+    description: Retrieve warehouse stock and stock status
+    queryParameters:
+      locationId: 
+        type: string
+        required: true  
+    responses:
+      200:
+        body:
+          application/json:
+            type: InventoryItem
+            example: !include ./examples/get-inventory-200.json
+
+/inventory/sync:
+  post:
+    is: [ client-id-required, standard-errors ]
+
+    body:
+      application/json:
+        type: InventoryItem
+
+    responses:
+      202:
+        body:
+          application/json:
+            type: SyncResponse
+            example:
+              correlationId: "abc-123"
+              status: "ACCEPTED"
+              message: "Inventory sync started"
+              timestamp: "2026-02-16T10:30:00Z"

@@ -12,12 +12,12 @@ http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/sc
 http://www.mulesoft.org/schema/mule/netsuite http://www.mulesoft.org/schema/mule/netsuite/current/mule-netsuite.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
 	<apikit:config name="gocs-inventory-papi-config"
-		api="resource::2c71d3d8-324e-48ff-adca-ccaa17313120:gocs-inventory-papi:1.0.0:raml:zip:gocs-inventory-papi.raml"
-		outboundHeadersMapName="outboundHeaders"
-		httpStatusVarName="httpStatus" />
+    raml="api/gocs-inventory-papi.raml"
+    outboundHeadersMapName="outboundHeaders"
+    httpStatusVarName="httpStatus" />
 	<!-- <api-gateway:autodiscovery apiId="20746516" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="c548fd9b-6f3a-470b-9a5c-b9d1c87bed09" flowRef="gocs-inventory-papi-main" /> -->	
 	<configuration-properties doc:name="Configuration properties" doc:id="a70d0c56-bfe4-45b7-8a43-5462bbdcfa0f" file="inventory-config.yaml" />
-	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="19bc314d-73b5-4ed9-9351-870ab08150ac" file="secure-properties.yaml" key="local-dev-only-123}" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="19bc314d-73b5-4ed9-9351-870ab08150ac" file="secure-properties.yaml" key="local-dev-only-123" />
 	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="309b0f97-8815-43e4-947b-492032338dc6" >
 		<http:listener-connection host="0.0.0.0" port="${http.port}" />
 	</http:listener-config>
@@ -156,16 +156,15 @@ output application/json
 	</flow>
 	<flow name="get:\inventory\(itemId):gocs-inventory-papi-config">
 		<set-variable value="#[attributes.uriParams.itemId]" doc:name="Set Variable" doc:id="dcd9f038-38a2-45b0-aed1-26e9214a0b6d" variableName="itemId"/>
-		<flow-ref doc:name="Flow Reference" doc:id="dac0211a-e39e-470a-b11e-9619044075a3" name="inventory-getbyid-flow"/>
+		<set-variable value="#[attributes.queryParams.locationId]" doc:name="Set Variable" doc:id="c5c3abce-1605-4976-91bb-0b090a062580" variableName="locationId"/>
+		<flow-ref doc:name="Flow Reference" doc:id="dac0211a-e39e-470a-b11e-9619044075a3" name="inventory-stock-statusFlow"/>
+		<set-variable value="#[payload.httpStatus default 200]" doc:name="Set Variable" doc:id="60d7e2ba-d9be-4fc9-99aa-2697de44c5d4" variableName="httpStatus"/>
 		<ee:transform doc:name="Transform Message" doc:id="6c820b23-f4e6-4020-9889-f949abcbedc1" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-payload[0] default {
-  message: "Inventory item not found",
-  itemId: vars.itemId
-}]]></ee:set-payload>
+payload - "httpStatus"]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>

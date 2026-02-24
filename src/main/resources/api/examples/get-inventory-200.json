@@ -1,0 +1,9 @@
+{
+  "itemId": "SKU-10001",
+  "locationId": "WH-01",
+  "onHand": 100,
+  "reserved": 20,
+  "available": 80,
+  "lastUpdatedAt": "2026-02-16T10:00:00Z",
+  "sourceSystem": "MYSQL"
+}

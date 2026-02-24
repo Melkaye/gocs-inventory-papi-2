@@ -16,10 +16,9 @@ output application/json
 ---
 {
   status: "UP",
-  api: "inventory-papi",
-  version: "v1",
-  timestamp: (now() as String)
-}             ]]></ee:set-payload>
+  service: "gocs-inventory-papi",
+  timestamp: now() as String
+}]]></ee:set-payload>
             </ee:message>
         </ee:transform>
     </flow>

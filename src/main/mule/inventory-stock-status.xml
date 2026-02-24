@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="inventory-stock-statusFlow" doc:id="bbf93515-2fc9-452b-8c13-383548a2ee9f" >
+	<db:select doc:name="Select Stock + Thresholds" config-ref="Database_Config">
+    <db:sql><![CDATA[SELECT
+ ws.item_id,
+ ws.location_id,
+ ws.on_hand,
+ ws.reserved,
+ (ws.on_hand - ws.reserved) AS available,
+ ws.last_updated_at,
+ ws.source_system,
+ th.safety_stock,
+ th.critical_stock
+FROM warehouse_stock ws
+JOIN stock_thresholds th
+  ON ws.item_id = th.item_id
+ AND ws.location_id = th.location_id
+WHERE ws.item_id = :itemId
+  AND ws.location_id = :locationId;
+]]></db:sql>
+
+    <!-- ADD THIS -->
+    <db:input-parameters><![CDATA[#[{
+  itemId: (vars.itemId default 0) as Number,
+  locationId: (vars.locationId default "")
+}]]]></db:input-parameters>
+  </db:select>
+  <ee:transform doc:name="Compute Stock Status" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+  <ee:message>
+    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+
+var row = (payload default [])[0] default null
+---
+if (row == null)
+  {
+    httpStatus: 404,
+    errorCode: "INV-404",
+    message:
+      "No inventory found for itemId=" ++ (vars.itemId default "null")
+      ++ " locationId=" ++ (vars.locationId default "null"),
+    timestamp: now() as String
+  }
+else do {
+  var onHand = (row.on_hand default 0) as Number
+  var reserved = (row.reserved default 0) as Number
+  var available = ((row.available default (onHand - reserved)) default 0) as Number
+  var safety = (row.safety_stock default 10) as Number
+  var critical = (row.critical_stock default 0) as Number
+
+var status =
+  if (available <= 0) "OUT_OF_STOCK"
+  else if (available <= critical) "CRITICAL_LOW_STOCK"
+  else if (available <= safety) "LOW_STOCK"
+  else "NORMAL"
+
+  ---
+  {
+    itemId: (row.item_id as String),
+    locationId: (row.location_id as String),
+    onHand: onHand,
+    reserved: reserved,
+    available: available,
+    lastUpdatedAt: row.last_updated_at,
+    sourceSystem: (row.source_system as String),
+    safetyStock: safety,
+    criticalStock: critical,
+    stockStatus: status
+  }
+}]]></ee:set-payload>
+  </ee:message>
+</ee:transform>
+	</flow>
+</mule>
