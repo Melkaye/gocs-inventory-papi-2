@@ -24,6 +24,16 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
 	<db:config name="Database_Config" doc:name="Database Config" doc:id="0a33ca15-69d6-45af-b56d-c99631027a81" >
 		<db:my-sql-connection host="localhost" port="3306" user="root" password="Nolanathan2024!!!" database="inventory_db"/>
 	</db:config>
+	<!-- ========= Shared Error Builder (Reusable) ========= -->
+    <sub-flow name="build-error-response"><logger level="ERROR" doc:name="Log Error" message="#[{'errorType': error.errorType, 'description': error.description, 'correlationId': correlationId}]"/><set-variable doc:name="Set httpStatus" variableName="httpStatus" value="500"/><ee:transform doc:name="Build Error JSON"><ee:message><ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  errorCode: "INV-500",
+  message: "Internal server error",
+  correlationId: correlationId,
+  timestamp: now() as String
+}]]></ee:set-payload></ee:message></ee:transform></sub-flow>
 	<flow name="gocs-inventory-papi-main">
 		<http:listener
 			path="/api/*" config-ref="HTTP_Listener_config">

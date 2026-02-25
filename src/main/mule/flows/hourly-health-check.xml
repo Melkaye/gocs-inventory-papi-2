@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<os:object-store name="ObjectStore_Config" doc:name="Object store" doc:id="05a6137e-ac94-4e07-8579-5e3d3843870c" />
+	<flow name="hourly-health-checkFlow" doc:id="d53df07d-4595-4f50-95b5-a453d19f4d14" >
+		<scheduler doc:name="Scheduler" doc:id="0292cf8a-e06c-4120-91df-528fcc180ee6" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="60000" startDelay="10000"/>
+			</scheduling-strategy>
+		</scheduler>
+		<db:select doc:name="Select" doc:id="11786513-b106-4e73-a2d4-3fd923e91f52" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT 1 AS ok;]]></db:sql>
+		</db:select>
+		<os:store doc:id="58eaeacc-2756-4497-8e1b-a5978b4a7b14" key="healthStatus" objectStore="ObjectStore_Config">
+			<os:value ><![CDATA[#[{
+  db: "UP",
+  checkedAt: now() as String
+}]]]></os:value>
+		</os:store>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="d465c53a-2782-4b66-84fa-7ebd1155de2d" >
+				<os:store doc:name="Store" doc:id="2c498533-c6c6-4ab7-a111-20f8f3c205d1" key="httpStatus" objectStore="ObjectStore_Config">
+					<os:value ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+  db: "DOWN",
+  checkedAt: now() as String,
+  error: "DB connectivity failure"
+}]]]></os:value>
+				</os:store>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>
