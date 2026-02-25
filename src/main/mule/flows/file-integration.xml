@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="304465ae-8f73-44fe-9eed-02e146873edb" />
+	<flow name="file-integrationFlow" doc:id="60272488-cb52-4eff-a7d7-e20e7e9baf9f" >
+		<file:listener doc:name="On New or Updated File" doc:id="0042643a-ec2a-491f-8583-b364ea4169c2" config-ref="File_Config" directory="/Users/w3117643/AnypointStudio/studio-workspace/gocs-inventory-papi-2/Regional-Updates">
+			<scheduling-strategy >
+				<fixed-frequency frequency="10000"/>
+			</scheduling-strategy>
+		</file:listener>
+		<file:read doc:name="Read" doc:id="cfd6f4eb-c415-42ba-bd5b-3abae2be348b" config-ref="File_Config" path="#[attributes.path]"/>
+		<ee:transform doc:name="Transform Message" doc:id="4805d968-7489-4f03-800f-a108c830c52c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="365c8308-a218-4a6a-a81c-71a43edd9523" message="#['CSV rows loaded: ' ++ (sizeOf(payload) as String)]" />
+		<file:move doc:name="Move" doc:id="775e83e0-4bda-429d-81f3-c9852dc30709" config-ref="File_Config" sourcePath="#[attributes.path]" targetPath="/Users/w3117643/AnypointStudio/studio-workspace/gocs-inventory-papi-2/Regional-Processed"/>
+	</flow>
+</mule>
