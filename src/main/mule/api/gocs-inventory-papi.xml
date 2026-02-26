@@ -22,7 +22,7 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
 		<http:listener-connection host="0.0.0.0" port="${http.port}" />
 	</http:listener-config>
 	<db:config name="Database_Config" doc:name="Database Config" doc:id="0a33ca15-69d6-45af-b56d-c99631027a81" >
-		<db:my-sql-connection host="localhost" port="3306" user="root" password="Nolanathan2024!!!" database="inventory_db"/>
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="Nolanathan2024!!!"/>
 	</db:config>
 	<!-- ========= Shared Error Builder (Reusable) ========= -->
     <sub-flow name="build-error-response"><logger level="ERROR" doc:name="Log Error" message="#[{'errorType': error.errorType, 'description': error.description, 'correlationId': correlationId}]"/><set-variable doc:name="Set httpStatus" variableName="httpStatus" value="500"/><ee:transform doc:name="Build Error JSON"><ee:message><ee:set-payload><![CDATA[%dw 2.0
