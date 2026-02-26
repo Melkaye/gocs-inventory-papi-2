@@ -9,7 +9,7 @@ http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/cu
 	<flow name="hourly-health-checkFlow" doc:id="d53df07d-4595-4f50-95b5-a453d19f4d14" >
 		<scheduler doc:name="Scheduler" doc:id="0292cf8a-e06c-4120-91df-528fcc180ee6" >
 			<scheduling-strategy >
-				<fixed-frequency frequency="60000" startDelay="10000"/>
+				<fixed-frequency startDelay="10000"/>
 			</scheduling-strategy>
 		</scheduler>
 		<db:select doc:name="Select" doc:id="11786513-b106-4e73-a2d4-3fd923e91f52" config-ref="Database_Config">

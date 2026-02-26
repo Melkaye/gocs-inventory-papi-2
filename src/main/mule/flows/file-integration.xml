@@ -1,28 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
-	xmlns:http="http://www.mulesoft.org/schema/mule/http"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
 	<file:config name="File_Config" doc:name="File Config" doc:id="304465ae-8f73-44fe-9eed-02e146873edb" />
 	<flow name="file-integrationFlow" doc:id="60272488-cb52-4eff-a7d7-e20e7e9baf9f" >
 		<file:listener doc:name="On New or Updated File" doc:id="0042643a-ec2a-491f-8583-b364ea4169c2" config-ref="File_Config" directory="/Users/w3117643/AnypointStudio/studio-workspace/gocs-inventory-papi-2/Regional-Updates">
 			<scheduling-strategy >
-				<fixed-frequency frequency="10000"/>
+				<fixed-frequency/>
 			</scheduling-strategy>
 		</file:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="cb7b95e5-1c95-43fd-b84b-77e90232a1ff" message="#['File received: ' ++ attributes.fileName ++ ' path=' ++ attributes.path]"/>
 		<file:read doc:name="Read" doc:id="cfd6f4eb-c415-42ba-bd5b-3abae2be348b" config-ref="File_Config" path="#[attributes.path]"/>
 		<ee:transform doc:name="Transform Message" doc:id="4805d968-7489-4f03-800f-a108c830c52c" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
-output application/java
+output application/json
 ---
-payload]]></ee:set-payload>
+payload map (row) -> {
+  ItemId: (row.ItemId as Number),
+  LocationId: row.LocationId,
+  RegionalStock: (row.RegionalStock as Number),
+  LastUpdatedAt: row.LastUpdatedAt
+}]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="365c8308-a218-4a6a-a81c-71a43edd9523" message="#['CSV rows loaded: ' ++ (sizeOf(payload) as String)]" />
+		<logger level="INFO" doc:name="Logger" doc:id="811bf0f3-6eae-444f-b578-d7f6c02b82cf" message="#['Rows=' ++ (sizeOf(payload) as String)]"/>
+		<batch:job jobName="regional-inventory-batch" doc:id="f568e0c6-fd0a-44e9-89ff-1fbcf766e98a" >
+			<batch:process-records >
+				<batch:step name="process-regional-records" doc:id="cb0f1275-404c-4776-8545-9eece2045b5e" >
+					<logger level="INFO" doc:name="Logger" doc:id="d310cd58-c3a9-4bc6-b5df-b7eb159bad4c" message="#['Processing Item=' ++ (payload.ItemId as String)&#10; ++ ' Location=' ++ (payload.LocationId as String)&#10; ++ ' Stock=' ++ (payload.RegionalStock as String)&#10; ++ ' Updated=' ++ (payload.LastUpdatedAt as String)]"/>
+					<db:update doc:name="Update" doc:id="9386bd66-6ada-41d0-9524-80aee6ea208e" config-ref="Database_Config">
+						<db:sql ><![CDATA[UPDATE inventory_db.warehouse_stock
+SET regional_stock = :RegionalStock,
+    last_updated_at = :LastUpdatedAt
+WHERE item_id = :ItemId
+  AND location_id = :LocationId;]]></db:sql>
+						<db:input-parameters ><![CDATA[#[{
+  ItemId: payload.ItemId,
+  LocationId: payload.LocationId,
+  RegionalStock: payload.RegionalStock,
+  LastUpdatedAt: (payload.LastUpdatedAt as DateTime) as String {format: "yyyy-MM-dd HH:mm:ss"}
+}]]]></db:input-parameters>
+					</db:update>
+					<logger level="INFO" doc:name="Logger" doc:id="66f8b4cd-4b2f-4ca2-a649-feb13c9fb157" message="#['DB update completed for Item=' ++ (payload.ItemId as String)]"/>
+				</batch:step>
+			</batch:process-records>
+		</batch:job>
+		<logger level="INFO" doc:name="Logger" doc:id="365c8308-a218-4a6a-a81c-71a43edd9523" message="'=== FILE FLOW HIT BEFORE MOVE ==='" />
 		<file:move doc:name="Move" doc:id="775e83e0-4bda-429d-81f3-c9852dc30709" config-ref="File_Config" sourcePath="#[attributes.path]" targetPath="/Users/w3117643/AnypointStudio/studio-workspace/gocs-inventory-papi-2/Regional-Processed"/>
 	</flow>
 </mule>
