@@ -28,3 +28,8 @@ secure-properties-tool-*.jar
 .tooling-apps-cache/
 target/
 .DS_Store
+
+Regional-Updates/
+Regional-Processed/
+Regional-Failed/
+.DS_Store
