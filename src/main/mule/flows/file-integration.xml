@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:db="http://www.mulesoft.org/schema/mule/db"
-	xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
-	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
-http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
 	<file:config name="File_Config" doc:name="File Config" doc:id="304465ae-8f73-44fe-9eed-02e146873edb" />
 	<flow name="file-integrationFlow" doc:id="60272488-cb52-4eff-a7d7-e20e7e9baf9f" >
 		<file:listener doc:name="On New or Updated File" doc:id="0042643a-ec2a-491f-8583-b364ea4169c2" config-ref="File_Config" directory="/Users/w3117643/AnypointStudio/studio-workspace/gocs-inventory-papi-2/Regional-Updates">
@@ -65,6 +66,23 @@ ON DUPLICATE KEY UPDATE
   LastUpdatedAt: vars.sfRow.LastUpdatedAt
 }]]]></db:input-parameters>
 					</db:insert>
+					<choice doc:name="Choice" doc:id="f9e717c7-4f66-47da-b8b8-34ca8f2c3d14" >
+						<when expression="#[vars.sfRow.TotalInventory &lt; 10]">
+							<ee:transform doc:name="Transform Message" doc:id="7df5d24d-71fd-4a55-9319-22c6989531ca" >
+								<ee:message >
+									<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  itemId: vars.sfRow.ItemId,
+  stockLevel: (vars.sfRow.TotalInventory default vars.sfRow.RegionalStock default 0) as Number,
+  timestamp: (now() as String)
+}]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+							<jms:publish doc:name="Publish" doc:id="165af42e-ad8b-45c9-96f2-37c194ed4964" config-ref="JMS_Config" destination="procurement.alert.queue"/>
+						</when>
+					</choice>
 					<set-payload value="#[vars.sfRow]" doc:name="Set Payload" doc:id="0ccb38a5-0b97-4033-8c58-4439624cc3b9" />
 					<salesforce:upsert externalIdFieldName="ItemId__c" doc:id="5b3ae39d-cb7a-4d6e-97f5-d6949784f5e3" objectType="Inventory__c" config-ref="Salesforce_Config"/>
 				</batch:step>
