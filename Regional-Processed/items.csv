@@ -1,0 +1,5 @@
+ItemId,WarehouseStock,RegionalStock,TotalInventory,Status
+9001,12,4,16,Available
+9002,0,7,7,Low Stock
+9003,55,10,65,Available
+9004,1,0,1,Low Stock

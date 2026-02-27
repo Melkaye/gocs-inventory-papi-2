@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
-	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
-http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
 	<file:config name="File_Config" doc:name="File Config" doc:id="304465ae-8f73-44fe-9eed-02e146873edb" />
 	<flow name="file-integrationFlow" doc:id="60272488-cb52-4eff-a7d7-e20e7e9baf9f" >
 		<file:listener doc:name="On New or Updated File" doc:id="0042643a-ec2a-491f-8583-b364ea4169c2" config-ref="File_Config" directory="/Users/w3117643/AnypointStudio/studio-workspace/gocs-inventory-papi-2/Regional-Updates">
@@ -23,21 +24,23 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/java
 var rows =
-  if (payload is Binary or payload is String)
-    read(payload, "application/csv")
-  else
+  if (payload is Array)
     payload
+  else
+    read(payload, "application/csv")
 ---
 rows map (row) -> {
   ItemId: (row.ItemId as Number),
-  LocationId: row.LocationId,
-  RegionalStock: (row.RegionalStock as Number),
+  LocationId: (row.LocationId default null),
+  WarehouseStock: (row.WarehouseStock as Number) default null,
+  RegionalStock: (row.RegionalStock as Number) default null,
+  TotalInventory: (row.TotalInventory as Number) default null,
 
-  // Convert ISO string -> "yyyy-MM-dd HH:mm:ss"
-LastUpdatedAt:
-  ((row.LastUpdatedAt as String)
-    replace "T" with " "
-    replace "Z" with "")
+  LastUpdatedAt:
+    if ((row.LastUpdatedAt default null) != null)
+      ((row.LastUpdatedAt as String) replace "T" with " " replace "Z" with "")
+    else
+      null
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -46,22 +49,24 @@ LastUpdatedAt:
 			<batch:process-records >
 				<batch:step name="process-regional-records" doc:id="cb0f1275-404c-4776-8545-9eece2045b5e" >
 					<logger level="INFO" doc:name="Logger" doc:id="d310cd58-c3a9-4bc6-b5df-b7eb159bad4c" message="#['Processing Item=' ++ (payload.ItemId as String)&#10; ++ ' Location=' ++ (payload.LocationId as String)&#10; ++ ' Stock=' ++ (payload.RegionalStock as String)&#10; ++ ' Updated=' ++ (payload.LastUpdatedAt as String)]"/>
-					<db:insert doc:name="Insert" doc:id="532a9a83-a539-4dcd-9c5c-c5718458e8b9" config-ref="Database_Config">
+					<set-variable value="#[payload]" doc:name="Set Variable" doc:id="7309c4ac-73c6-4d9e-bac9-4e118d193868" variableName="sfRow"/>
+					<db:insert doc:name="Insert" doc:id="4538f474-99c0-4795-b7a5-987828845569" config-ref="Database_Config">
 						<db:sql ><![CDATA[INSERT INTO inventory_db.warehouse_stock
   (item_id, location_id, regional_stock, last_updated_at)
 VALUES
-  (:ItemId, :LocationId, :RegionalStock, :LastUpdatedAt) AS new
+  (:ItemId, :LocationId, :RegionalStock, :LastUpdatedAt)
 ON DUPLICATE KEY UPDATE
-  regional_stock = new.regional_stock,
-  last_updated_at = new.last_updated_at;]]></db:sql>
+  regional_stock = VALUES(regional_stock),
+  last_updated_at = VALUES(last_updated_at);]]></db:sql>
 						<db:input-parameters ><![CDATA[#[{
-  ItemId: payload.ItemId,
-  LocationId: payload.LocationId,
-  RegionalStock: payload.RegionalStock,
-  LastUpdatedAt: payload.LastUpdatedAt
+  ItemId: vars.sfRow.ItemId,
+  LocationId: vars.sfRow.LocationId,
+  RegionalStock: vars.sfRow.RegionalStock,
+  LastUpdatedAt: vars.sfRow.LastUpdatedAt
 }]]]></db:input-parameters>
 					</db:insert>
-					<logger level="INFO" doc:name="Logger" doc:id="66f8b4cd-4b2f-4ca2-a649-feb13c9fb157" message="#['DB update completed for Item=' ++ (payload.ItemId as String)]"/>
+					<set-payload value="#[vars.sfRow]" doc:name="Set Payload" doc:id="0ccb38a5-0b97-4033-8c58-4439624cc3b9" />
+					<salesforce:upsert externalIdFieldName="ItemId__c" doc:id="5b3ae39d-cb7a-4d6e-97f5-d6949784f5e3" objectType="Inventory__c" config-ref="Salesforce_Config"/>
 				</batch:step>
 			</batch:process-records>
 		</batch:job>

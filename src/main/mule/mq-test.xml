@@ -23,7 +23,10 @@
   </jms:config>
 
   <!-- MQ TEST FLOW -->
-  <http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="24c9d27a-719f-4548-b9c8-a725c8c71451" >
+  <http:listener-config name="httpListenerOAuth" doc:name="HTTP Listener config" doc:id="24c9d27a-719f-4548-b9c8-a725c8c71451" >
+		<http:listener-connection host="localhost" port="8084" />
+	</http:listener-config>
+	<http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="ece7599d-3118-47e3-a568-d2761e08fb9d" >
 		<http:listener-connection host="0.0.0.0" port="8083" />
 	</http:listener-config>
 	<flow name="mq-testFlow">
