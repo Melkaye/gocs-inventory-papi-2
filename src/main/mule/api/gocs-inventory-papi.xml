@@ -27,7 +27,7 @@ http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mu
 	</db:config>
 	<!-- ========= Shared Error Builder (Reusable) ========= -->
 	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="5d45adb4-2251-4b71-92a0-010b673e92c0" >
-		<salesforce:jwt-connection consumerKey="3MVG9dAEux2v1sLt4tILyY8McUCFeWX_Auz7wCrvjeleJaUmWzGSLYzujWpTzLLSIH4PYaOwzavT_1zrxx8qq" keyStore="00DgL00000MOuve.jks" storePassword="Nolanathan2024!!!" certificateAlias="mule_jwt_certs" principal="gmelkaye.baa355240e63@agentforce.com" audienceUrl="https://login.salesforce.com" />
+		<salesforce:jwt-connection consumerKey="3MVG9dAEux2v1sLt4tILyY8McUCFeWX_Auz7wCrvjeleJaUmWzGSLYzujWpTzLLSIH4PYaOwzavT_1zrxx8qq" keyStore="classpath:00DgL00000MOuve.jks" storePassword="Nolanathan2024!!!" certificateAlias="mule_jwt_certs" principal="gmelkaye.baa355240e63@agentforce.com" audienceUrl="https://login.salesforce.com" />
 	</salesforce:sfdc-config>
 	<sub-flow name="build-error-response"><logger level="ERROR" doc:name="Log Error" message="#[{'errorType': error.errorType, 'description': error.description, 'correlationId': correlationId}]"/><set-variable doc:name="Set httpStatus" variableName="httpStatus" value="500"/><ee:transform doc:name="Build Error JSON"><ee:message><ee:set-payload><![CDATA[%dw 2.0
 output application/json

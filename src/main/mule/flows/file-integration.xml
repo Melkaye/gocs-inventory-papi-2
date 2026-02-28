@@ -46,7 +46,7 @@ rows map (row) -> {
 			</ee:message>
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="811bf0f3-6eae-444f-b578-d7f6c02b82cf" message="#['Rows=' ++ (sizeOf(payload) as String)]" />
-		<batch:job jobName="regional-inventory-batch" doc:id="f568e0c6-fd0a-44e9-89ff-1fbcf766e98a" >
+		<batch:job jobName="regional-inventory-batch" doc:id="f568e0c6-fd0a-44e9-89ff-1fbcf766e98a" maxFailedRecords="100" blockSize="5">
 			<batch:process-records >
 				<batch:step name="process-regional-records" doc:id="cb0f1275-404c-4776-8545-9eece2045b5e" >
 					<logger level="INFO" doc:name="Logger" doc:id="d310cd58-c3a9-4bc6-b5df-b7eb159bad4c" message="#['Processing Item=' ++ (payload.ItemId as String)&#10; ++ ' Location=' ++ (payload.LocationId as String)&#10; ++ ' Stock=' ++ (payload.RegionalStock as String)&#10; ++ ' Updated=' ++ (payload.LastUpdatedAt as String)]"/>
@@ -66,11 +66,12 @@ ON DUPLICATE KEY UPDATE
   LastUpdatedAt: vars.sfRow.LastUpdatedAt
 }]]]></db:input-parameters>
 					</db:insert>
-					<choice doc:name="Choice" doc:id="f9e717c7-4f66-47da-b8b8-34ca8f2c3d14" >
+					<try doc:name="Try" doc:id="4ebf8e75-601d-4b7a-9d23-984255927529" >
+						<choice doc:name="Choice" doc:id="f9e717c7-4f66-47da-b8b8-34ca8f2c3d14">
 						<when expression="#[vars.sfRow.TotalInventory &lt; 10]">
 							<jms:publish doc:name="Publish" doc:id="165af42e-ad8b-45c9-96f2-37c194ed4964" config-ref="JMS_Config" destination="procurement.alert.queue">
-								<jms:message >
-									<jms:body ><![CDATA[#[{
+								<jms:message>
+									<jms:body><![CDATA[#[{
     itemId: vars.sfRow.ItemId,
     stockLevel: ((vars.sfRow.TotalInventory default vars.sfRow.RegionalStock default 0) as Number),
     timestamp: now() as String
@@ -78,18 +79,23 @@ ON DUPLICATE KEY UPDATE
 								</jms:message>
 							</jms:publish>
 							<salesforce:upsert objectType="Inventory__c" externalIdFieldName="ItemId__c" doc:name="Upsert" doc:id="c71eb378-88b8-4416-83db-9647d9d991cf" config-ref="Salesforce_Config">
-								<salesforce:records ><![CDATA[#[vars.sfRow]]]></salesforce:records>
+								<salesforce:records><![CDATA[#[[vars.sfRow]]]]></salesforce:records>
 							</salesforce:upsert>
 						</when>
 					</choice>
-					<choice doc:name="Choice" doc:id="c43e9f0a-bc0f-412e-a6b4-d12f9aab01fd" >
+						<choice doc:name="Choice" doc:id="c43e9f0a-bc0f-412e-a6b4-d12f9aab01fd">
 						<when expression="#[vars.sfRow.TotalInventory &gt; 100]">
 							<salesforce:upsert objectType="Inventory__c" externalIdFieldName="ItemId__c" doc:name="Upsert" doc:id="fd42354d-5dfc-407e-9336-6538dc49c884" config-ref="Salesforce_Config">
-								<salesforce:records ><![CDATA[#[vars.sfRow]]]></salesforce:records>
+								<salesforce:records><![CDATA[#[[vars.sfRow]]]]></salesforce:records>
 							</salesforce:upsert>
 						</when>
 					</choice>
-					<set-payload value="#[vars.sfRow]" doc:name="Set Payload" doc:id="0ccb38a5-0b97-4033-8c58-4439624cc3b9" />
+						<error-handler >
+							<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="cf77e8f1-0be0-4bfe-b0fd-dd854f78edbb" >
+								<logger level="INFO" doc:name="Logger" doc:id="50f632e0-8338-4685-88d2-331dd16356c1" message='#["RECORD FAILED item=" ++ (vars.sfRow.ItemId as String)&#10;  ++ " loc=" ++ (vars.sfRow.LocationId as String)&#10;  ++ " stock=" ++ ((vars.sfRow.TotalInventory default vars.sfRow.RegionalStock default 0) as Number as String)&#10;  ++ " | type=" ++ (error.errorType.identifier default "n/a")&#10;  ++ " | msg=" ++ (error.description default "n/a")]'/>
+							</on-error-continue>
+						</error-handler>
+					</try>
 				</batch:step>
 			</batch:process-records>
 		</batch:job>
