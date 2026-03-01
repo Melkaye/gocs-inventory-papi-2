@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<error-handler name="globalErrorHandler" doc:id="24344106-1453-47bf-a5f1-a5bf7e11623e" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="5364c780-592d-4641-9ced-33eecc8bb29b" type="SALESFORCE:CONNECTIVITY">
+			<logger level="INFO" doc:name="Logger" doc:id="5cda1345-4768-4803-b386-494a58fcef53" message='#[output application/json ---&#10;{&#10;  event: "SALESFORCE_OUTAGE",&#10;  errorType: error.errorType as String,&#10;  description: error.description,&#10;  correlationId: correlationId,&#10;  timestamp: now() as String&#10;}]]'/>
+			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  status: "ERROR",&#10;  system: "salesforce",&#10;  message: "Salesforce service is unavailable. Please retry later.",&#10;  correlationId: correlationId,&#10;  timestamp: now() as String&#10;}]' doc:name="Set Payload" doc:id="a0fddeb9-e79d-407a-a1f8-c4bae9613fa4" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="c38331e4-602c-462a-88a7-f1e87b0bb5a9" type="DB:CONNECTIVITY">
+			<logger level="INFO" doc:name="Logger" doc:id="f2eaf092-1d6d-4240-9385-b52bd5ab6a5c" message='#[output application/json ---&#10;{&#10;  "event": "DB_CONNECTIVITY_FAILURE",&#10;  "system": "database",&#10;  "errorType": (error.errorType as String),&#10;  "description": (error.description default ""),&#10;  "correlationId": (correlationId default (attributes.correlationId default "")),&#10;  "timestamp": now() as String&#10;}]'/>
+			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  status: "ERROR",&#10;  system: "database",&#10;  message: "Database connection failed. Processing stopped.",&#10;  correlationId: correlationId,&#10;  timestamp: now() as String&#10;}]' doc:name="Set Payload" doc:id="53bc5473-6b79-4d2b-8273-2d4924c9cf1a" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="c0ed9c5b-c933-464d-b6f3-e91e50648934" type="JMS:CONNECTIVITY">
+			<logger level="INFO" doc:name="Logger" doc:id="d8d8c987-8d7b-441a-8aa5-1391629ceb1f" message='#[output application/json ---&#10;{&#10;  "event": "JMS_UNAVAILABLE",&#10;  "system": "jms",&#10;  "errorType": (error.errorType as String),&#10;  "description": (error.description default ""),&#10;  "correlationId": (correlationId default (attributes.correlationId default "")),&#10;  "timestamp": now() as String&#10;}]'/>
+			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  status: "ERROR",&#10;  system: "JMS",&#10;  message: "Messaging system is unavailable.",&#10;  correlationId: correlationId,&#10;  timestamp: now() as String&#10;}]' doc:name="Set Payload" doc:id="09d7b662-6ca3-4f9d-ba00-b1c55edfbb08" />
+		</on-error-propagate>
+	</error-handler>
+</mule>

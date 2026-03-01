@@ -148,6 +148,9 @@ ON DUPLICATE KEY UPDATE
 					<logger level="INFO" doc:name="Logger" doc:id="e319fedd-a779-4ce7-99db-660071a1b8ad" message="#['DB OK item=' ++ vars.sfRow.ItemId]"/>
 				</batch:step>
 			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="a2bbe43f-2ad8-44c4-aba5-72fcdd517eca" message='#["Batch Job Finished. Total: " ++ payload.totalRecords ++ &#10;", Successful: " ++ payload.successfulRecords ++ &#10;", Failed: " ++ payload.failedRecords]'/>
+			</batch:on-complete>
 		</batch:job>
 		<logger level="INFO" doc:name="Logger" doc:id="365c8308-a218-4a6a-a81c-71a43edd9523" message="'=== FILE FLOW HIT BEFORE MOVE ==='" />
 		<file:move doc:name="Move" doc:id="775e83e0-4bda-429d-81f3-c9852dc30709" config-ref="File_Config" sourcePath='#[vars.sourcePath]' targetPath="/Users/w3117643/AnypointStudio/studio-workspace/gocs-inventory-papi-2/Regional-Processed"/>
