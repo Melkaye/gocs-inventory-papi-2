@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="dw-transformation-test-suite.xml" />
+	<munit:test name="dw_transform_test" doc:id="40ddd3c8-95e5-49cd-9312-ba55e9046e19" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Event" doc:id="c09742d2-8edd-4282-92a9-7a8b66f9e4ed" >
+				<munit:payload value='#[{ &#10;  ItemId: "1203",&#10;  WarehouseStock: "10",&#10;  RegionalStock: "2"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="ed4ec297-5732-4848-86f1-8a5c2ca8ac71" name="file-integrationFlow"/>
+		</munit:behavior>
+	</munit:test>
+
+</mule>

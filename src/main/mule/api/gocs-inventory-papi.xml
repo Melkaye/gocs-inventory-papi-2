@@ -198,4 +198,26 @@ output application/json
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="9b11b341-acf8-40dc-967b-1b8e515829ae" message="Correlation ID: #[correlationId]"/>
 	</flow>
+	<sub-flow name="sfMap_inventory_from_csv_subflow" doc:id="3d00cac9-7a2b-4d26-ab07-204b21e27a67" >
+		<ee:transform doc:name="Transform Message" doc:id="02a6c64c-e30e-4a43-963e-bc9466c4b43c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[{
+  ItemId__c: vars.sfRow.ItemId as String,
+  WarehouseStock__c: vars.sfRow.WarehouseStock,
+  RegionalStock__c: vars.sfRow.RegionalStock,
+  TotalInventory__c: vars.sfRow.TotalInventory,
+  Status__c:
+      if ((vars.sfRow.TotalInventory default 0) < 10)
+        "LowStock"
+      else if ((vars.sfRow.TotalInventory default 0) > 100)
+        "HighStock"
+      else
+        "Normal"
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
 </mule>

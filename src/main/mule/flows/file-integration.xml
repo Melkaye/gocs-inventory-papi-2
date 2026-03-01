@@ -72,26 +72,7 @@ LIMIT 1;]]></db:sql>
 								</jms:message>
 							</jms:publish>
 								<logger level="INFO" doc:name="Logger" doc:id="bb35447f-8083-4ad5-a8cd-1c1c9a9e0d8e" message="#['JMS OK item= ' ++ vars.sfRow.ItemId]"/>
-								<ee:transform doc:name="Transform Message" doc:id="12cb5cfc-9dca-4c01-8be9-8aa307f712b2">
-									<ee:message>
-										<ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-[{
-  ItemId__c: vars.sfRow.ItemId as String,
-  WarehouseStock__c: vars.sfRow.WarehouseStock,
-  RegionalStock__c: vars.sfRow.RegionalStock,
-  TotalInventory__c: vars.sfRow.TotalInventory,
-  Status__c:
-      if ((vars.sfRow.TotalInventory default 0) < 10)
-        "LowStock"
-      else if ((vars.sfRow.TotalInventory default 0) > 100)
-        "HighStock"
-      else
-        "Normal"
-}]]]></ee:set-payload>
-									</ee:message>
-								</ee:transform>
+								<flow-ref doc:name="Flow Reference" doc:id="35821574-edde-4215-964a-34df2b210833" name="sfMap_inventory_from_csv_subflow"/>
 								<salesforce:upsert objectType="Inventory__c" externalIdFieldName="ItemId__c" doc:name="Upsert" doc:id="c71eb378-88b8-4416-83db-9647d9d991cf" config-ref="Salesforce_Config" target="sfResponseLow">
 							</salesforce:upsert>
 								<logger level="INFO" doc:name="Logger" doc:id="8632ce41-0c0f-44ed-bc79-1452d0110aa8" message="#['SF OK item= ' ++ vars.sfRow.ItemId]"/>
@@ -99,26 +80,7 @@ output application/java
 					</choice>
 						<choice doc:name="Choice" doc:id="c43e9f0a-bc0f-412e-a6b4-d12f9aab01fd">
 						<when expression="#[(vars.sfRow.TotalInventory default 0) &gt; 100]">
-								<ee:transform doc:name="Transform Message" doc:id="18052de7-850e-455a-9198-659df826c464">
-									<ee:message>
-										<ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-[{
-  ItemId__c: vars.sfRow.ItemId as String,
-  WarehouseStock__c: vars.sfRow.WarehouseStock,
-  RegionalStock__c: vars.sfRow.RegionalStock,
-  TotalInventory__c: vars.sfRow.TotalInventory,
-  Status__c:
-      if ((vars.sfRow.TotalInventory default 0) < 10)
-        "LowStock"
-      else if ((vars.sfRow.TotalInventory default 0) > 100)
-        "HighStock"
-      else
-        "Normal"
-}]]]></ee:set-payload>
-									</ee:message>
-								</ee:transform>
+								<flow-ref doc:name="Flow Reference" doc:id="18de4aa0-abaf-463a-90ff-21e1678665f1" name="sfMap_inventory_from_csv_subflow"/>
 								<salesforce:upsert objectType="Inventory__c" externalIdFieldName="ItemId__c" doc:name="Upsert" doc:id="fd42354d-5dfc-407e-9336-6538dc49c884" config-ref="Salesforce_Config" target="sfResponseHigh">
 							</salesforce:upsert>
 								<logger level="INFO" doc:name="Logger" doc:id="aa4eca3c-6449-42d7-9c79-6b91ebaec169" message="#['SF OK item= ' ++ vars.sfRow.ItemId]"/>
