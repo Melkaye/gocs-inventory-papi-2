@@ -1,20 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xsi:schemaLocation="
-		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
-		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
-	<munit:config name="dw-transformation-test-suite.xml" />
-	<munit:test name="dw_transform_test" doc:id="40ddd3c8-95e5-49cd-9312-ba55e9046e19" >
-		<munit:behavior >
-			<munit:set-event doc:name="Set Event" doc:id="c09742d2-8edd-4282-92a9-7a8b66f9e4ed" >
-				<munit:payload value='#[{ &#10;  ItemId: "1203",&#10;  WarehouseStock: "10",&#10;  RegionalStock: "2"&#10;}]' />
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+  <munit:config name="dw-transformation-test-suite"/>
+
+  <munit:test name="dw_transform_test" doc:id="d9dda238-6994-46d4-8222-da9f57cae13b">
+
+    <munit:execution>
+
+      <!-- Arrange: create vars.sfRow because your DW reads vars.sfRow.* -->
+      <munit:set-event doc:name="Set Event">
+				<munit:variables >
+					<munit:variable key="sfRow" value='#[{&#10;            ItemId: "1203",&#10;            WarehouseStock: 10,&#10;            RegionalStock: 2,&#10;            TotalInventory: 12&#10;          }]' />
+				</munit:variables>
+      </munit:set-event>
+
+      <!-- Act: run the subflow and capture OUTPUT into vars.sfOut -->
+      <flow-ref doc:name="Flow Reference"
+                name="sfMap_inventory_from_csv_subflow"
+                target="sfOut"/>
+
+    </munit:execution>
+
+    <munit:validation>
+
+      <!-- Assert expected output values -->
+      <!-- If your DW outputs an ARRAY with one object, keep [0]. If it outputs an object, remove [0]. -->
+
+      <munit-tools:assert-equals doc:name="Assert ItemId__c"
+                                actual="#[vars.sfOut[0].ItemId__c]"
+                                expected='1203'/>
+
+      <munit-tools:assert-equals doc:name="Assert TotalInventory__c"
+                                actual="#[vars.sfOut[0].TotalInventory__c]"
+                                expected="#[12]"/>
+
+      <munit-tools:assert-equals doc:name="Assert Status__c"
+                                actual="#[vars.sfOut[0].Status__c]"
+                                expected="Normal"/>
+
+    </munit:validation>
+
+  </munit:test>
+	<munit:test name="dw_transform_normal_test" doc:id="8278adc0-5244-4780-bd30-aeade4bf2a49" >
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="0d8e70bb-3f1c-4f47-831b-694b6ec3f598" >
+				<munit:variables >
+					<munit:variable key="sfRow" value='#[{&#10;  ItemId: "1203",&#10;  WarehouseStock: 10,&#10;  RegionalStock: 2,&#10;  TotalInventory: 12&#10;}]' />
+				</munit:variables>
 			</munit:set-event>
-			<flow-ref doc:name="Flow Reference" doc:id="ed4ec297-5732-4848-86f1-8a5c2ca8ac71" name="file-integrationFlow"/>
-		</munit:behavior>
+			<flow-ref doc:name="Flow Reference" doc:id="c54ee52c-1a3b-4bac-9638-b71cc8a74f60" name="sfMap_inventory_from_csv_subflow" target="sfOut"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="b6aa171c-817d-4b78-b62f-a775123c764f" actual="#[vars.sfOut[0].Status__c]" expected='Normal'/>
+		</munit:validation>
 	</munit:test>
 
 </mule>
