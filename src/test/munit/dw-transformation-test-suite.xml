@@ -63,5 +63,44 @@
 			<munit-tools:assert-equals doc:name="Assert equals" doc:id="b6aa171c-817d-4b78-b62f-a775123c764f" actual="#[vars.sfOut[0].Status__c]" expected='Normal'/>
 		</munit:validation>
 	</munit:test>
+	<munit:test name="dw_transform_boundary_10_test" doc:id="2632cec6-479f-4182-adef-ae45a74906c9" >
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="7d932c54-22e0-4b0c-b652-5d8e40622896" >
+				<munit:variables >
+					<munit:variable key="sfRow" value='#[{&#10;  ItemId: "1203",&#10;  WarehouseStock: 10,&#10;  RegionalStock: 2,&#10;  TotalInventory: 10&#10;}]' />
+				</munit:variables>
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="bd4ee3e5-cc63-4f53-878d-5adf60e3cc9c" name="sfMap_inventory_from_csv_subflow" target="sfOut"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="da59780b-e42a-4433-a802-6ec4902db7b1" actual="#[vars.sfOut[0].Status__c]" expected="Normal"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="transform_boundary_100_test" doc:id="cccd32d6-1d1d-4004-a106-45292bdbbaea" >
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="e698eceb-c61f-45e9-9600-deb93181fe1c" >
+				<munit:variables >
+					<munit:variable key="sfRow" value='#[{&#10;  ItemId: "1203",&#10;  WarehouseStock: 10,&#10;  RegionalStock: 2,&#10;  TotalInventory: 100&#10;}]' />
+				</munit:variables>
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="92220b36-b46e-4de8-98d1-72072945f8bf" name="sfMap_inventory_from_csv_subflow" target="sfOut"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="759638ec-ce42-48c3-9e29-0c037bde15b9" actual="#[vars.sfOut[0].Status__c]" expected="Normal"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="dw_transform_boundary_100_test" doc:id="f41faa42-644d-4967-8afd-868ebec5fd97" >
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="9c594ce9-1193-4d1f-b860-266f4ab3e9a9" >
+				<munit:variables >
+					<munit:variable key="sfRow" value='#[{&#10;  ItemId: "1203",&#10;  WarehouseStock: 10,&#10;  RegionalStock: 2,&#10;  TotalInventory: 100&#10;}]' />
+				</munit:variables>
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="a412808d-40a8-4bc5-9585-9ef3a459f396" name="sfMap_inventory_from_csv_subflow" target="sfOut"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="0cccff8e-bb77-4bd3-bb3a-2ac5d788dfbe" actual="#[vars.sfOut[0].Status__c]" expected="Normal"/>
+		</munit:validation>
+	</munit:test>
 
 </mule>
