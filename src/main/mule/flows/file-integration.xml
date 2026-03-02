@@ -11,6 +11,28 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
 http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
 http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
 	<file:config name="File_Config" doc:name="File Config" doc:id="304465ae-8f73-44fe-9eed-02e146873edb" />
+	<sub-flow name="regional_finalize_file_subflow" doc:id="d4332b5b-af7f-4ca0-89e2-c149f7ea0b27" >
+		<logger level="INFO" doc:name="Logger" doc:id="365c8308-a218-4a6a-a81c-71a43edd9523" message="'=== FILE FLOW HIT BEFORE MOVE ==='" />
+		<file:move doc:name="Move" doc:id="775e83e0-4bda-429d-81f3-c9852dc30709" config-ref="File_Config" sourcePath="#[vars.sourcePath]" targetPath="/Users/w3117643/AnypointStudio/studio-workspace/gocs-inventory-papi-2/Regional-Processed" />
+	</sub-flow>
+	<sub-flow name="regional_audit_insert_subflow" doc:id="786c1f37-a7db-4b5f-a26a-9988a28d4837" >
+		<db:insert doc:name="Insert" doc:id="4538f474-99c0-4795-b7a5-987828845569" config-ref="Database_Config">
+						<db:sql><![CDATA[INSERT INTO inventory_db.warehouse_stock
+  (item_id, location_id, regional_stock, last_updated_at)
+VALUES
+  (:ItemId, :LocationId, :RegionalStock, :LastUpdatedAt)
+ON DUPLICATE KEY UPDATE
+  regional_stock = VALUES(regional_stock),
+  last_updated_at = VALUES(last_updated_at);]]></db:sql>
+						<db:input-parameters><![CDATA[#[{
+  ItemId: vars.sfRow.ItemId,
+  LocationId: vars.sfRow.LocationId,
+  RegionalStock: vars.sfRow.RegionalStock,
+  LastUpdatedAt: vars.sfRow.LastUpdatedAt
+}]]]></db:input-parameters>
+					</db:insert>
+		<logger level="INFO" doc:name="Logger" doc:id="e319fedd-a779-4ce7-99db-660071a1b8ad" message="#['DB OK item=' ++ vars.sfRow.ItemId]" />
+	</sub-flow>
 	<sub-flow name="regional_sf_upsert_subflow" doc:id="01e08571-1d72-4b72-9f07-073c7ef0294b" >
 		<flow-ref doc:name="Flow Reference" doc:id="35821574-edde-4215-964a-34df2b210833" name="sfMap_inventory_from_csv_subflow" />
 		<salesforce:upsert objectType="Inventory__c" externalIdFieldName="ItemId__c" doc:name="Upsert" doc:id="c71eb378-88b8-4416-83db-9647d9d991cf" config-ref="Salesforce_Config" target="sfResponseLow">
@@ -27,7 +49,7 @@ http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/
 }]]]></jms:body>
 								</jms:message>
 							</jms:publish>
-		<logger level="INFO" doc:name="Logger" doc:id="bb35447f-8083-4ad5-a8cd-1c1c9a9e0d8e" message="#['JMS OK item= ' ++ vars.sfRow.ItemId]" />
+		<logger level="INFO" doc:name="Logger" doc:id="bb35447f-8083-4ad5-a8cd-1c1c9a9e0d8e" message='#["JMS OK item= " ++ ((payload.ItemId default "UNKNOWN") as String)]' />
 	</sub-flow>
 	<sub-flow name="regional_db_select_subflow" doc:id="e2e963ac-d5e3-4729-8387-69ed4e8009ac" >
 		<db:select doc:name="Select" doc:id="90d81011-42b2-4dfa-aee6-5d9b3e253e53" config-ref="Database_Config" target="dbRow">
@@ -102,29 +124,13 @@ rows map (row) -> {
 							</on-error-continue>
 						</error-handler>
 					</try>
-					<db:insert doc:name="Insert" doc:id="4538f474-99c0-4795-b7a5-987828845569" config-ref="Database_Config">
-						<db:sql><![CDATA[INSERT INTO inventory_db.warehouse_stock
-  (item_id, location_id, regional_stock, last_updated_at)
-VALUES
-  (:ItemId, :LocationId, :RegionalStock, :LastUpdatedAt)
-ON DUPLICATE KEY UPDATE
-  regional_stock = VALUES(regional_stock),
-  last_updated_at = VALUES(last_updated_at);]]></db:sql>
-						<db:input-parameters><![CDATA[#[{
-  ItemId: vars.sfRow.ItemId,
-  LocationId: vars.sfRow.LocationId,
-  RegionalStock: vars.sfRow.RegionalStock,
-  LastUpdatedAt: vars.sfRow.LastUpdatedAt
-}]]]></db:input-parameters>
-					</db:insert>
-					<logger level="INFO" doc:name="Logger" doc:id="e319fedd-a779-4ce7-99db-660071a1b8ad" message="#['DB OK item=' ++ vars.sfRow.ItemId]"/>
+					<flow-ref doc:name="Flow Reference" doc:id="91fbeda3-d4bf-4de0-a81b-f9f8aa0bb4c3" name="regional_audit_insert_subflow" />
 				</batch:step>
 			</batch:process-records>
 			<batch:on-complete >
 				<logger level="INFO" doc:name="Logger" doc:id="a2bbe43f-2ad8-44c4-aba5-72fcdd517eca" message='#["Batch Job Finished. Total: " ++ payload.totalRecords ++ &#10;", Successful: " ++ payload.successfulRecords ++ &#10;", Failed: " ++ payload.failedRecords]'/>
 			</batch:on-complete>
 		</batch:job>
-		<logger level="INFO" doc:name="Logger" doc:id="365c8308-a218-4a6a-a81c-71a43edd9523" message="'=== FILE FLOW HIT BEFORE MOVE ==='" />
-		<file:move doc:name="Move" doc:id="775e83e0-4bda-429d-81f3-c9852dc30709" config-ref="File_Config" sourcePath='#[vars.sourcePath]' targetPath="/Users/w3117643/AnypointStudio/studio-workspace/gocs-inventory-papi-2/Regional-Processed"/>
+		<flow-ref doc:name="Flow Reference" doc:id="3f1a65ed-8162-4b1d-a618-6bfedfd10cb0" name="regional_finalize_file_subflow" />
 	</flow>
 </mule>

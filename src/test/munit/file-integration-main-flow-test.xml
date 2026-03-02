@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="file-integration-main-flow-test.xml" />
+	<munit:test name="file-integration-main-flow-testTest" doc:id="06c98056-09b3-47cd-86c8-fd1ee4bda5a9" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="be42e9f4-5f56-4153-8e6c-4b5635a5e5a9" processor="file:read">
+				<munit-tools:then-return >
+					<munit-tools:payload value='#["ItemId,LocationId,RegionalStock,LastUpdatedAt\n1203,R1,12,2026-03-01T00:00:00Z\n"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="010037a2-8277-40d8-bdbf-19a3c870b7f3" processor="db:select">
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[{ onhand: 20, reserved: 5 }]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="5f9dfed0-13a6-4488-a554-9b3843c2a392" processor="jms:publish">
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[{}]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="b78b687e-d389-4fbf-ac20-be600f45a911" processor="salesforce:upsert">
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[{}]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="0326f9a3-05e6-43d7-b2bb-fdf2fa6cf538" processor="db:insert">
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[{}]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="f6a76cc9-51fd-4b97-81de-28e2438158cc" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="regional_finalize_file_subflow" attributeName="name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[{}]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="25e0cf0c-7bb4-4c1d-997f-c0fd6a22280c" >
+				<munit:payload value="#[{}]" />
+				<munit:attributes value='#[{&#10;    fileName: "sample.csv",&#10;    path: "/input/sample.csv",&#10;    directory: "/input"&#10;  }]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="a58a6931-f172-48b7-b0b5-b39562b3d884" name="file-integrationFlow"/>
+		</munit:execution>
+	</munit:test>
+
+</mule>

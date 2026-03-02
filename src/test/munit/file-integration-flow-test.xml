@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="file-integration-flow-test.xml" />
+	<munit:test name="regional_db_insert_test" doc:id="fae73566-e038-4199-9dd3-605986508980" expectedErrorType="MULE:CONNECTIVITY" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="0091893b-7291-4020-8680-7b379a05870b" processor="db:insert">
+				<munit-tools:then-return >
+					<munit-tools:error typeId="MULE:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="93dd91d2-3c81-404d-aa04-fcf9180e4ad6" >
+				<munit:payload value='#[{&#10;  ItemId: "1203",&#10;  LocationId: "R1",&#10;  WarehouseStock: 10,&#10;  RegionalStock: 12,&#10;  TotalInventory: 22,&#10;  LastUpdatedAt: "2026-03-01T00:00:00Z"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="9029bea7-838c-44dc-a570-e1fdc2eaa836" name="regional_audit_insert_subflow"/>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="regional_file_move_test" doc:id="506828e0-186d-4c02-8ea9-8701f01068f2" expectedErrorType="MULE:CONNECTIVITY">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="f844d4fb-35a0-4f1c-8c2d-c0b18c1aecd8" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="regional_finalize_file_subflow" attributeName="name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="MULE:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="9584e4a1-cdce-463a-8079-2d6150dc0e1e" >
+				<munit:payload value="#[{}]" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="250a7659-fac9-4abe-90c9-5797a300a38c" name="regional_finalize_file_subflow"/>
+		</munit:execution>
+	</munit:test>
+
+</mule>

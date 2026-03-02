@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+    <munit:config name="connectivity-error-test-suite.xml"/>
+    <munit:test name="db_connectivity_should_propagate" doc:id="ef89a316-34a3-463d-a765-d0622ef9923c" expectedErrorType="CONNECTIVITY">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="093f8ccd-85fc-48db-8baa-27bc0e8b2b28" processor="db:select">
+				<munit-tools:then-return >
+					<munit-tools:error typeId="CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="c6fb907b-89a4-4453-8fc7-e957a39c3b90" >
+				<munit:payload value='#[{&#10;  ItemId: "1203",&#10;  LocationId: "R1",&#10;  RegionalStock: 12,&#10;  LastUpdatedAt: "2026-03-01T00:00:00Z"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="0f7c6a6b-7358-45b7-a639-9d0a4e377438" name="regional_db_select_subflow"/>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="salesforce_outage_should_propagate" doc:id="94c658a1-021f-462d-8d1b-3a70fa8bf343" expectedErrorType="SALESFORCE:CONNECTIVITY">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="26c16e40-7dcc-4bef-8414-aab1b57a178e" processor="salesforce:upsert">
+				<munit-tools:then-return >
+					<munit-tools:error typeId="SALESFORCE:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="1826b682-d01c-4048-9310-bf8dfa4d33cc" >
+				<munit:payload value='#[{&#10;  ItemId: "1203",&#10;  LocationId: "R1",&#10;  RegionalStock: 12,&#10;  LastUpdatedAt: "2026-03-01T00:00:00Z"&#10;}]' />
+				<munit:variables >
+					<munit:variable key="sfRow" value='#[{&#10;  ItemId: "1203",&#10;  WarehouseStock: 10,&#10;  RegionalStock: 12,&#10;  TotalInventory: 22&#10;}]' />
+				</munit:variables>
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="e0f23065-77c9-4ac0-a8ba-c4afbd75e631" name="regional_sf_upsert_subflow" />
+		</munit:execution>
+	</munit:test>
+	<munit:test name="JMS_unavailable_should_propagate"
+            doc:id="b011c753-9bbf-4da5-8f03-5909c727d51d"
+            expectedErrorType="MULE:CONNECTIVITY">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="6146465e-848b-4ec3-a77b-2ebe9bc344d1" processor="jms:publish">
+				<munit-tools:then-return >
+					<munit-tools:error typeId="MULE:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="0cf15b6e-e91a-4816-897c-c138c238e3b0" >
+				<munit:payload value='#[{&#10;  ItemId: "1203",&#10;  LocationId: "R1",&#10;  RegionalStock: 12,&#10;  LastUpdatedAt: "2026-03-01T00:00:00Z"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="a0f72e66-8167-4aba-924c-f6be52e3e385" name="regional_jms_publish_subflow"/>
+		</munit:execution>
+	</munit:test>
+</mule>
