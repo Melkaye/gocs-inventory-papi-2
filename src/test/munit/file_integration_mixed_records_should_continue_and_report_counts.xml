@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="file_integration_mixed_records_should_continue_and_report_counts.xml" />
+	<munit:test name="file_integration_mixed_records_should_continue_and_report_countsTest" doc:id="f73fadf7-68ce-40e6-aedc-018845498a2d" >
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="f7b823f4-6ac7-4ae1-a6de-468dd8ce2a28" processor="file:read">
+				<munit-tools:then-return >
+					<munit-tools:payload value='#["ItemId,LocationId,RegionalStock,LastUpdatedAt\n" ++&#10;"1203,R1,0,2026-03-01T00:00:00Z\n" ++&#10;"1204,R1,50,2026-03-01T00:00:00Z\n"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="9dea5f6a-0c20-40d2-b624-f16fb09e9903" >
+				<munit:attributes value='#[{&#10;    fileName: "sample.csv",&#10;    path: "/input/sample.csv",&#10;    directory: "/input"&#10;  }]' />
+				<munit:variables >
+					<munit:variable key="sourcePath" value='"/input/sample.csv"' />
+				</munit:variables>
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="d49f0d15-5696-42cd-90ba-05f595de9a05" name="file-integrationFlow"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="c200e5a8-e739-4954-b22b-cb0968c38364" actual='#[payload contains "Total Records processed: 2"]' expected="true"/>
+		</munit:validation>
+	</munit:test>
+
+</mule>
