@@ -38,7 +38,7 @@ output application/json
   correlationId: correlationId,
   timestamp: now() as String
 }]]></ee:set-payload></ee:message></ee:transform></sub-flow>
-	<flow name="gocs-inventory-papi-main">
+	<flow name="gocs-inventory-papi-main" doc:id="4cb1670f-3680-494d-aba6-480147e1f90d">
 		<http:listener
 			path="/api/*" config-ref="HTTP_Listener_config">
 		</http:listener>
@@ -133,7 +133,7 @@ output application/json
 			</on-error-propagate>
 		</error-handler>
 	</flow>
-	<flow name="gocs-inventory-papi-console">
+	<flow name="gocs-inventory-papi-console" doc:id="8881df74-421c-4a1b-ab74-9a2708457897">
 		<http:listener
 			path="/console/*" config-ref="HTTP_Listener_config">
 			<http:response
@@ -164,7 +164,7 @@ output application/json
 			</on-error-propagate>
 		</error-handler>
 	</flow>
-	<flow name="get:\health:gocs-inventory-papi-config">
+	<flow name="get:\health:gocs-inventory-papi-config" doc:id="c6558bf7-c1fa-40bc-a784-bf252408ddfe">
 		<flow-ref doc:name="Flow Reference"
 			doc:id="3b96fbbe-ebdc-4f4f-8356-29d3ae807056" name="health-impl" />
 	</flow>
@@ -182,7 +182,7 @@ payload - "httpStatus"]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
-	<flow name="post:\inventory\sync:gocs-inventory-papi-config">
+	<flow name="post:\inventory\sync:gocs-inventory-papi-config" doc:id="d3349f52-1413-4273-8d0b-e8b6df00e7f3">
 		<ee:transform doc:name="Transform Message">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0

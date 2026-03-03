@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="inventory_sync_test.xml" />
+	<munit:test name="inventory_sync_testTest" doc:id="7ffde42f-ec3b-4724-a312-3dc2b969ddaf" >
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="289e9924-40ab-4a38-9792-5859bb9554a1" >
+				<munit:payload value="#[{}]" />
+				<munit:attributes value='#[{&#10;  method: "POST",&#10;  requestPath: "/api/inventory/sync",&#10;  headers: {}&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="93dbcb28-c419-464f-85b1-3557d8ea0480" name="post:\inventory\sync:gocs-inventory-papi-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="010d9ba8-d05e-4c6d-9496-258e171772dc" actual="#[payload.message]" expected="Inventory sync started"/>
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="bf504a89-52c8-48c4-8f18-825cc0dd3645" actual="#[payload.status]" expected="ACCEPTED"/>
+		</munit:validation>
+	</munit:test>
+
+</mule>

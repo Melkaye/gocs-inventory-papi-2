@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="health_check_test.xml" />
+	<munit:test name="health_check_testTest" doc:id="41eea415-e634-432c-bbdb-bfb32e3373ac" >
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="209c04e6-1e6a-41a9-9e70-e70ba72af37c" processor="os:retrieve">
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[{&#10;  status: "UP",&#10;  api: "inventory-papi",&#10;  version: "v1"&#10;}]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="7a313e02-946d-49fa-a0cd-95efeef187dd" >
+				<munit:payload value="#[{}]" />
+				<munit:attributes value='#[{&#10;  method: "GET",&#10;  requestPath: "/api/health",&#10;  headers: {}&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="cd468aa6-ef52-42ce-8c9b-600cbec08c8f" name="get:\health:gocs-inventory-papi-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="b0ab5315-37a2-418e-966b-df9d4364403b" actual="#[payload.status]" expected="UP"/>
+		</munit:validation>
+	</munit:test>
+
+</mule>
