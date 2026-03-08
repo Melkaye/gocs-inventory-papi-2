@@ -6,10 +6,10 @@ db:
   port: "3306"
   user: "myuser"
   password: "mypassword"
-  database: "inventory"
+  database: "inventory_db"
 
 salesforce:
-  username: "your.sf.user@example.com"
+  username: "my.sf.user@example.com"
   token: "sf-token-placeholder"
 
 activemq:

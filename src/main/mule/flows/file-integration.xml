@@ -40,6 +40,7 @@ ON DUPLICATE KEY UPDATE
 		<logger level="INFO" doc:name="Logger" doc:id="8632ce41-0c0f-44ed-bc79-1452d0110aa8" message="#['SF OK item= ' ++ vars.sfRow.ItemId]" />
 	</sub-flow>
 	<sub-flow name="regional_jms_publish_subflow" doc:id="2f5eba23-9d97-4203-9462-c2c1e0de58a5" >
+		<logger level="INFO" doc:name="Logger" doc:id="4af85d09-de3c-4729-a7c7-3f5c94c53ea4" message="#[output application/json ---&#10;{&#10;  itemId: payload.itemId default payload.ItemId default null,&#10;  warehouseStock: payload.warehouseStock default payload.WarehouseStock default null,&#10;  regionalStock: payload.regionalStock default payload.RegionalStock default null,&#10;  totalInventory: payload.totalInventory default payload.TotalInventory default null,&#10;  fullPayload: payload&#10;}]"/>
 		<jms:publish doc:name="Publish" doc:id="165af42e-ad8b-45c9-96f2-37c194ed4964" config-ref="JMS_Config" destination="procurement.alert.queue">
 								<jms:message>
 									<jms:body><![CDATA[#[{
@@ -64,7 +65,8 @@ LIMIT 1;]]></db:sql>
 }]]]></db:input-parameters>
 					</db:select>
 		<logger level="INFO" doc:name="Logger" doc:id="d310cd58-c3a9-4bc6-b5df-b7eb159bad4c" message="#['Processing Item=' ++ (payload.ItemId as String)&#10; ++ ' Location=' ++ (payload.LocationId as String)&#10; ++ ' Stock=' ++ (payload.RegionalStock as String)&#10; ++ ' Updated=' ++ (payload.LastUpdatedAt as String)]" />
-		<set-variable value="#[do {&#10;    var db = (vars.dbRow default [])[0] default {}&#10;    var onhand = (db.onhand default 0) as Number&#10;    var reserved = (db.reserved default 0) as Number&#10;    var regional = (payload.RegionalStock default 0) as Number&#10;    var warehouse = onhand - reserved&#10;    ---&#10;    {&#10;      ItemId: payload.ItemId,&#10;      LocationId: payload.LocationId,&#10;      WarehouseStock: warehouse,&#10;      RegionalStock: regional,&#10;      TotalInventory: warehouse + regional,&#10;      LastUpdatedAt: payload.LastUpdatedAt&#10;    }&#10;  }]" doc:name="Set Variable" doc:id="7309c4ac-73c6-4d9e-bac9-4e118d193868" variableName="sfRow" />
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="e9c612e8-2c3d-4fb5-81c7-b43abfbfd8e2" variableName="dbRow"/>
+		<set-variable value="#[%dw 2.0&#10;output application/java&#10;---&#10;do {&#10;    var db = ((vars.dbRow default [])[0]) default {}&#10;    var onhand = (db.on_hand default 0) as Number&#10;    var reserved = (db.reserved default 0) as Number&#10;    var regional = (payload.RegionalStock default 0) as Number&#10;    var warehouse = onhand - reserved&#10;    ---&#10;    {&#10;        ItemId: payload.ItemId as String,&#10;        LocationId: payload.LocationId as String,&#10;        WarehouseStock: warehouse,&#10;        RegionalStock: regional,&#10;        TotalInventory: warehouse + regional,&#10;        LastUpdatedAt: payload.LastUpdatedAt&#10;    }&#10;}]" doc:name="Set Variable" doc:id="7309c4ac-73c6-4d9e-bac9-4e118d193868" variableName="sfRow" />
 	</sub-flow>
 	<flow name="file-integrationFlow" doc:id="60272488-cb52-4eff-a7d7-e20e7e9baf9f" >
 		<file:listener doc:name="On New or Updated File" doc:id="0042643a-ec2a-491f-8583-b364ea4169c2" config-ref="File_Config" directory="/Users/w3117643/AnypointStudio/studio-workspace/gocs-inventory-papi-2/Regional-Updates">
@@ -102,7 +104,6 @@ rows map (row) -> {
 			<batch:process-records >
 				<batch:step name="process-regional-records" doc:id="cb0f1275-404c-4776-8545-9eece2045b5e" >
 					<flow-ref doc:name="Flow Reference" doc:id="a65b8488-9a16-4435-a991-c245c80f88ee" name="regional_db_select_subflow" />
-					<set-variable value="#[payload]" doc:name="Set Variable" doc:id="6a7b6edc-78f8-43ab-905d-ebb09cbdadde" variableName="sfRow"/>
 					<try doc:name="Try" doc:id="4ebf8e75-601d-4b7a-9d23-984255927529" >
 						<choice doc:name="Choice" doc:id="f9e717c7-4f66-47da-b8b8-34ca8f2c3d14">
 						<when expression="#[(vars.sfRow.TotalInventory default 0) &lt; 10]">

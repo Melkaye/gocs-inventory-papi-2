@@ -198,10 +198,10 @@ output application/json
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="9b11b341-acf8-40dc-967b-1b8e515829ae" message="Correlation ID: #[correlationId]"/>
 	</flow>
-	<sub-flow name="sfMap_inventory_from_csv_subflow" doc:id="3d00cac9-7a2b-4d26-ab07-204b21e27a67" >
-		<ee:transform doc:name="Transform Message" doc:id="02a6c64c-e30e-4a43-963e-bc9466c4b43c" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+	<sub-flow name="sfMap_inventory_from_csv_subflow" doc:id="3d00cac9-7a2b-4d26-ab07-204b21e27a67">
+		<ee:transform doc:name="Transform Message" doc:id="02a6c64c-e30e-4a43-963e-bc9466c4b43c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/java
 ---
 [{

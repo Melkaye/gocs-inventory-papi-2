@@ -18,7 +18,7 @@
 		</munit:behavior>
 		<munit:execution >
 			<munit:set-event doc:name="Set Event" doc:id="9dea5f6a-0c20-40d2-b624-f16fb09e9903" >
-				<munit:attributes value='#[{&#10;    fileName: "sample.csv",&#10;    path: "/input/sample.csv",&#10;    directory: "/input"&#10;  }]' />
+				<munit:attributes value='#[{&#10;    fileName: "sample.csv",&#10;    path: "input/sample.csv",&#10;    directory: "/input"&#10;  }]' />
 				<munit:variables >
 					<munit:variable key="sourcePath" value='"/input/sample.csv"' />
 				</munit:variables>
