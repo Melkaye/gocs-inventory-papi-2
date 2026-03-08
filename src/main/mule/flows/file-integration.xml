@@ -65,13 +65,12 @@ LIMIT 1;]]></db:sql>
 }]]]></db:input-parameters>
 					</db:select>
 		<logger level="INFO" doc:name="Logger" doc:id="d310cd58-c3a9-4bc6-b5df-b7eb159bad4c" message="#['Processing Item=' ++ (payload.ItemId as String)&#10; ++ ' Location=' ++ (payload.LocationId as String)&#10; ++ ' Stock=' ++ (payload.RegionalStock as String)&#10; ++ ' Updated=' ++ (payload.LastUpdatedAt as String)]" />
-		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="e9c612e8-2c3d-4fb5-81c7-b43abfbfd8e2" variableName="dbRow"/>
-		<set-variable value="#[%dw 2.0&#10;output application/java&#10;---&#10;do {&#10;    var db = ((vars.dbRow default [])[0]) default {}&#10;    var onhand = (db.on_hand default 0) as Number&#10;    var reserved = (db.reserved default 0) as Number&#10;    var regional = (payload.RegionalStock default 0) as Number&#10;    var warehouse = onhand - reserved&#10;    ---&#10;    {&#10;        ItemId: payload.ItemId as String,&#10;        LocationId: payload.LocationId as String,&#10;        WarehouseStock: warehouse,&#10;        RegionalStock: regional,&#10;        TotalInventory: warehouse + regional,&#10;        LastUpdatedAt: payload.LastUpdatedAt&#10;    }&#10;}]" doc:name="Set Variable" doc:id="7309c4ac-73c6-4d9e-bac9-4e118d193868" variableName="sfRow" />
+		<set-variable value="#[%dw 2.0&#10;output application/java&#10;var db = ((vars.dbRow default [])[0]) default {}&#10;var onhand = (db.on_hand default 0) as Number&#10;var reserved = (db.reserved default 0) as Number&#10;var regional = (payload.RegionalStock default 0) as Number&#10;var warehouse = onhand - reserved&#10;---&#10;{&#10;  ItemId: payload.ItemId as String,&#10;  LocationId: payload.LocationId as String,&#10;  WarehouseStock: warehouse,&#10;  RegionalStock: regional,&#10;  TotalInventory: warehouse + regional,&#10;  LastUpdatedAt: payload.LastUpdatedAt&#10;}]" doc:name="Set Variable" doc:id="7309c4ac-73c6-4d9e-bac9-4e118d193868" variableName="sfRow" />
 	</sub-flow>
 	<flow name="file-integrationFlow" doc:id="60272488-cb52-4eff-a7d7-e20e7e9baf9f" >
 		<file:listener doc:name="On New or Updated File" doc:id="0042643a-ec2a-491f-8583-b364ea4169c2" config-ref="File_Config" directory="/Users/w3117643/AnypointStudio/studio-workspace/gocs-inventory-papi-2/Regional-Updates">
 			<scheduling-strategy >
-				<fixed-frequency frequency="5000"/>
+				<fixed-frequency frequency="30000"/>
 			</scheduling-strategy>
 		</file:listener>
 		<logger level="INFO" doc:name="Logger" doc:id="cb7b95e5-1c95-43fd-b84b-77e90232a1ff" message="#['File received: ' ++ attributes.fileName ++ ' path=' ++ attributes.path]"/>
@@ -128,8 +127,8 @@ rows map (row) -> {
 			</batch:process-records>
 			<batch:on-complete >
 				<logger level="INFO" doc:name="Logger" doc:id="a2bbe43f-2ad8-44c4-aba5-72fcdd517eca" message='#["Batch Job Finished. Total: " ++ payload.totalRecords ++ &#10;", Successful: " ++ payload.successfulRecords ++ &#10;", Failed: " ++ payload.failedRecords]'/>
+				<flow-ref doc:name="Flow Reference" doc:id="3f1a65ed-8162-4b1d-a618-6bfedfd10cb0" name="regional_finalize_file_subflow" />
 			</batch:on-complete>
 		</batch:job>
-		<flow-ref doc:name="Flow Reference" doc:id="3f1a65ed-8162-4b1d-a618-6bfedfd10cb0" name="regional_finalize_file_subflow" />
 	</flow>
 </mule>
